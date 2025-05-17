@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="stylesheet" href="css/style.css">
+
+<script src="cfar10/demo/jquery-1.8.3.min.js"></script>
+<script src="cfar10/build/vis.js"></script>
+<script src="cfar10/build/util.js"></script>
+<script src="cfar10/build/convnet.js"></script>
+
+<script src="js/image-helpers.js"></script>
+<script src="js/pica.js"></script>
+
+<script src="cfar10/demo/cifar10/cifar10_labels.js"></script>
+<script type="text/javascript">
+  // ------------------------
+  // BEGIN CIFAR-10 SPECIFIC STUFF
+  // ------------------------
+  var classes_txt = ['airplane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'];
+  var dataset_name = "cifar10";
+  var num_batches = 51; // 20 training batches, 1 test
+  var test_batch = 50;
+  var num_samples_per_batch = 1000;
+  var image_dimension = 32;
+  var image_channels = 3;
+  var use_validation_data = true;
+  var random_flip = true;
+  var random_position = true;
+
+  var layer_defs, net, trainer;
+  var t = "layer_defs = [];\n\
+  layer_defs.push({type:'input', out_sx:32, out_sy:32, out_depth:3});\n\
+  layer_defs.push({type:'conv', sx:5, filters:16, stride:1, pad:2, activation:'relu'});\n\
+  layer_defs.push({type:'pool', sx:2, stride:2});\n\
+  layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n\
+  layer_defs.push({type:'pool', sx:2, stride:2});\n\
+  layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n\
+  layer_defs.push({type:'pool', sx:2, stride:2});\n\
+  layer_defs.push({type:'softmax', num_classes:10});\n\
+  \n\
+  net = new convnetjs.Net();\n\
+  net.makeLayers(layer_defs);\n\
+  \n\
+  trainer = new convnetjs.SGDTrainer(net, {method:'adadelta', batch_size:4, l2_decay:0.0001});\n\
+  ";
+  // ------------------------
+  // END CIFAR-10 SPECIFIC STUFF
+  // ------------------------
+</script>
+<script src="js/images-demo.js"></script>
+
+</head>
+<body>
+   <script type="text/javascript" src="js/jqxcore.js"></script>
+    <script type="text/javascript" src="js/jqxdraw.js"></script>
+    <script type="text/javascript" src="js/jqxknob.js"></script>
+    <script type="text/javascript" src="js/jqxnumberinput.js"></script>
+<style type="text/css">
+        .container {
+            position: relative;
+        }
+        .inputField {
+            left: 110px;
+            top: 323px;
+            position: absolute;
+            background: transparent;
+            border: none;
+        }
+        text.jqx-knob-label {
+            font-size: 20px;
+        }
+        .inputField .jqx-input-content {
+            background: transparent;
+            font-size: 20px;
+            color: grey;
+
+        }
+  .knobs{display: flex;
+    justify-content: space-around;}
+  .knobs>div{display:flex}
+  text.jqx-knob-label{display:none;}
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+    $('.container').jqxKnob({
+                height: 190,
+                width: 190,
+                value: 60,
+                min: 0,
+                max: 100,
+                startAngle: 120,
+                endAngle: 480,
+                snapToStep: true,
+                rotation: 'clockwise',
+                labels: {
+                    offset: '88%',
+                    step: 10,
+                    visible: true
+                },
+                marks: {
+                    colorRemaining: { color: '#373636', border: '#373636' },
+                    colorProgress: { color: '#373636', border: '#373636' },
+                    type: 'line',
+                    offset: '71%',
+                    thickness: 1,
+                    size: '6%',
+                    majorSize: '9%',
+                    majorInterval: 10,
+                    minorInterval: 2
+                },
+                progressBar: {
+                    size: '70%',
+                    offset: '0%',
+                    background: {
+                        stroke: '#373636', strokeWidth: 1, fill: { color: '#a7a7a7', gradientType: "linear", gradientStops: [[0, 1], [50, 0.5], [100, 1]] }
+                    }
+                },
+                pointer: {
+                    type: 'circle', style: { fill: { color: '#a4a3a3', gradientType: "linear", gradientStops: [[0, 0.5], [50, 0.6], [100, 1]] }, stroke: '#333' },
+                    size: '10%', offset: '50%'
+                }
+            });
+  })
+    </script>
+<div class="knobs">
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+ </div>
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+  </div>
+ </div>
+    
+  <div id="wrap">
+  <h2 style="text-align: center;"></p>
+  <h1>Training Stats</h1>
+  <div class="divsec" style="270px;">
+    <div class="secpart">
+      <input id="buttontp" type="submit" value="pause" onclick="toggle_pause();"/>
+      <div id="trainstats"></div>
+
+      <div id="controls">
+        Learning rate: <input name="lri" type="text" maxlength="20" id="lr_input"/>
+        <input id="buttonlr" type="submit" value="change" onclick="change_lr();"/>
+        <br />
+
+        Momentum: <input name="momi" type="text" maxlength="20" id="momentum_input"/>
+        <input id="buttonmom" type="submit" value="change" onclick="change_momentum();"/>
+        <br />
+
+        Batch size: <input name="bsi" type="text" maxlength="20" id="batch_size_input"/>
+        <input id="buttonbs" type="submit" value="change" onclick="change_batch_size();"/>
+        <br />
+
+        Weight decay: <input name="wdi" type="text" maxlength="20" id="decay_input"/>
+        <input id="buttonwd" type="submit" value="change" onclick="change_decay();"/>
+      </div>
+
+      <input id="buttondj" type="submit" value="save network snapshot as JSON" onclick="dump_json();"/><br />
+      <input id="buttonlfj" type="submit" value="init network from JSON snapshot" onclick="load_from_json();"/><br />
+      <textarea id="dumpjson"></textarea>
+      <br>
+
+      <input id="buttonpre" type="submit" value="load a pretrained network (achieves ~80% accuracy)" onclick="load_pretrained();" style="height: 30px; width: 400px;"/><br />
+    </div>
+    <div class="secpart">
+      <div>
+        Loss:<br />
+        <canvas id="lossgraph">
+        </canvas>
+        <br />
+        <input id="buttoncg" type="submit" value="clear graph" onclick="clear_graph();"/>
+      </div>
+    </div>
+    <div class="secpart"> 
+      <div id="upload_box">
+        Test an image from your computer:
+        <div id="img_div">
+            <img id="preview_img"/>
+        </div>
+        <input name="image" type="file" accept="image/*" onchange="loadFile(event)">
+
+        <input type="submit" value="Test Image" onclick="testImage(document.getElementById('preview_img'))">
+      </div>
+    </div>
+    <div style="clear:both;"></div>
+  </div>
+
+  <h1>Instantiate a Network and Trainer</h1>
+  <div>
+    <textarea id="newnet" style="width:100%; height:200px;"></textarea><br />
+    <input id="buttonnn" type="submit" value="change network" onclick="change_net();" style="width:200px;height:30px;"/>
+  </div>
+
+  <div class="divsec">
+  <h1>Network Visualization</h1>
+    <div id="visnet"></div>
+  </div>
+  
+  <div class="divsec">
+  <h1>Example predictions on Test set</h1>
+    <div id="testset_acc"></div>
+    <div id="testset_vis"></div>
+  </div>
+
+  </div>  
+  <script> 
+const url1 ='https://momarmbergan.github.io/Vitalsjs/demo/cifar10.html';
+const url2 ='https://momarmbergan.github.io/Vitalsjs/src/base64.txt'; 
+
+async function fetchFileSize(url) {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    
+    const contentLength = response.headers.get('Content-Length');
+    if (contentLength) {
+      return parseInt(contentLength, 10);
+    } else {
+      throw new Error('Content-Length header not found');
+    }
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+    return null;
+  }
+}
+
+function updateFileSizes() {
+  Promise.all([fetchFileSize(url1), fetchFileSize(url2)]).then(([fileSize1, fileSize2]) => {
+    let div1 = $('#byteStream1');
+    let div2 = $('#byteStream2');
+
+    if (div1.length === 0) {
+      div1 = $('<div id="byteStream1"></div>');
+      $('#trainstats').after(div1);
+    }
+    if (div2.length === 0) {
+      div2 = $('<div id="byteStream2"></div>');
+      div1.after(div2);
+    }
+    
+    if (fileSize1 !== null) {
+      div1.text(`Stream Bytes: ${fileSize1} bytes`);
+    } else {
+      div1.text('Error fetching file size 1');
+    }
+
+    if (fileSize2 !== null) {
+      div2.text(`Stealth Stream Bytes: ${fileSize2} bytes`);
+    } else {
+      div2.text('Error fetching file size 2');
+    }
+  });
+}
+
+// Call the function immediately and then every 5 seconds
+updateFileSizes();
+setInterval(updateFileSizes, 1000);
+
+</script>
+</body>
+
+</html>
+
+
+

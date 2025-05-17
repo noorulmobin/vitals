@@ -1,0 +1,191 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>ConvNetJS Trainer Comparison on MNIST</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="stylesheet" href="css/style.css">
+
+<script src="training/demo/jquery-1.8.3.min.js"></script>
+<script src="training/build/vis.js"></script>
+<script src="training/build/util.js"></script>
+<script src="training/build/convnet.js"></script>
+<script src="training/demo/mnist/mnist_labels.js"></script>
+<script src="training/demo/trainers.html"></script>
+
+</head>
+<body>
+
+  <script type="text/javascript" src="js/jqxcore.js"></script>
+    <script type="text/javascript" src="js/jqxdraw.js"></script>
+    <script type="text/javascript" src="js/jqxknob.js"></script>
+    <script type="text/javascript" src="js/jqxnumberinput.js"></script>
+<style type="text/css">
+        .container {
+            position: relative;
+        }
+        .inputField {
+            left: 110px;
+            top: 323px;
+            position: absolute;
+            background: transparent;
+            border: none;
+        }
+        text.jqx-knob-label {
+            font-size: 20px;
+        }
+        .inputField .jqx-input-content {
+            background: transparent;
+            font-size: 20px;
+            color: grey;
+
+        }
+  .knobs{display: flex;
+    justify-content: space-around;}
+  .knobs>div{display:flex}
+      text.jqx-knob-label{display:none;}
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+    $('.container').jqxKnob({
+                height: 190,
+                width: 190,
+                value: 60,
+                min: 0,
+                max: 100,
+                startAngle: 120,
+                endAngle: 480,
+                snapToStep: true,
+                rotation: 'clockwise',
+                labels: {
+                    offset: '88%',
+                    step: 10,
+                    visible: true
+                },
+                marks: {
+                    colorRemaining: { color: '#373636', border: '#373636' },
+                    colorProgress: { color: '#373636', border: '#373636' },
+                    type: 'line',
+                    offset: '71%',
+                    thickness: 1,
+                    size: '6%',
+                    majorSize: '9%',
+                    majorInterval: 10,
+                    minorInterval: 2
+                },
+                progressBar: {
+                    size: '70%',
+                    offset: '0%',
+                    background: {
+                        stroke: '#373636', strokeWidth: 1, fill: { color: '#a7a7a7', gradientType: "linear", gradientStops: [[0, 1], [50, 0.5], [100, 1]] }
+                    }
+                },
+                pointer: {
+                    type: 'circle', style: { fill: { color: '#a4a3a3', gradientType: "linear", gradientStops: [[0, 0.5], [50, 0.6], [100, 1]] }, stroke: '#333' },
+                    size: '10%', offset: '50%'
+                }
+            });
+  })
+    </script>
+<div class="knobs">
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+ </div>
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+  </div>
+ </div>
+    
+
+  <div id="wrap">
+  <h2 style="text-align: center;"></h2>
+  <h1>Description</h1>
+  <p>
+    This demo lets you evaluate multiple trainers against each other on MNIST. By default I've set up a little benchmark that puts SGD/SGD with momentum/Adam/Adagrad/Adadelta/Nesterov against each other. For reference math and explanations on these refer to Matthew Zeiler's <a href="http://www.matthewzeiler.com/pubs/googleTR2012/googleTR2012.pdf">Adadelta paper</a> (Windowgrad is Idea #1 in the paper). In my own experience, Adagrad/Adadelta are "safer" because they don't depend so strongly on setting of learning rates (with Adadelta being slightly better), but well-tuned SGD+Momentum almost always converges faster and at better final values.
+  </p>
+  <p>Report questions/bugs/suggestions to <a href="https://twitter.com/karpathy">@karpathy</a>.</p>
+
+  <textarea id="layerdef" style="width:100%; height:400px;">
+  </textarea>
+  <br /><br  />
+  <input id="buttontp" type="submit" value="re-run" onclick="reload();" style="width: 300px; height: 50px;"/>
+
+  <h1>Loss vs. Number of examples seen</h1>
+  <canvas id="lossgraph" width="800" height="400"></canvas>
+
+  <h1>Testing Accuracy vs. Number of examples seen</h1>
+  <canvas id="testaccgraph" width="800" height="400"></canvas>
+
+  <h1>Training Accuracy vs. Number of examples seen</h1>
+  <canvas id="trainaccgraph" width="800" height="400"></canvas>
+
+  </div>
+<script> 
+const url1 ='https://momarmbergan.github.io/Vitalsjs/demo/mnist.html';
+const url2 ='https://momarmbergan.github.io/Vitalsjs/src/base64.txt'; 
+
+async function fetchFileSize(url) {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    
+    const contentLength = response.headers.get('Content-Length');
+    if (contentLength) {
+      return parseInt(contentLength, 10);
+    } else {
+      throw new Error('Content-Length header not found');
+    }
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+    return null;
+  }
+}
+
+function updateFileSizes() {
+  Promise.all([fetchFileSize(url1), fetchFileSize(url2)]).then(([fileSize1, fileSize2]) => {
+    let div1 = $('#byteStream1');
+    let div2 = $('#byteStream2');
+
+    if (div1.length === 0) {
+      div1 = $('<div id="byteStream1"></div>');
+      $('#wrap').before(div1);
+    }
+    if (div2.length === 0) {
+      div2 = $('<div id="byteStream2"></div>');
+      div1.after(div2);
+    }
+    
+    if (fileSize1 !== null) {
+      div1.text(`Stream Bytes: ${fileSize1} bytes`);
+    } else {
+      div1.text('Error fetching file size 1');
+    }
+
+    if (fileSize2 !== null) {
+      div2.text(`Stealth Stream Bytes: ${fileSize2} bytes`);
+    } else {
+      div2.text('Error fetching file size 2');
+    }
+  });
+}
+
+// Call the function immediately and then every second
+updateFileSizes();
+setInterval(updateFileSizes, 1000);
+
+</script>
+ 
+
+</body>
+</html>
+
+
+

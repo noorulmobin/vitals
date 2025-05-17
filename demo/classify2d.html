@@ -1,0 +1,224 @@
+<html>
+<head>
+<title></title>
+<link href='http://fonts.googleapis.com/css?family=Cabin' rel='stylesheet' type='text/css'>
+
+<script src="classify2D/demo/jquery-1.8.3.min.js"></script>
+<script src="classify2D/demo/npgmain.js"></script>
+<script src="classify2D/build/convnet.js"></script>
+<script src="classify2D/build/util.js"></script>
+<script src="js/classify2d.js"></script>
+
+<style type="text/css">
+body {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  color: #333;
+  padding: 20px;
+}
+canvas { 
+    border: 1px solid #555;
+}
+#wrap {
+  width: 900px;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 200px;
+}
+.pane {
+  width: 420px;
+  display: inline-block;
+  vertical-align: top;
+}
+input[type="submit"]
+{
+  margin: 3px;
+}
+
+</style>
+
+</head>
+
+<body>
+ <script type="text/javascript" src="js/jqxcore.js"></script>
+    <script type="text/javascript" src="js/jqxdraw.js"></script>
+    <script type="text/javascript" src="js/jqxknob.js"></script>
+    <script type="text/javascript" src="js/jqxnumberinput.js"></script>
+<style type="text/css">
+        .container {
+            position: relative;
+        }
+        .inputField {
+            left: 110px;
+            top: 323px;
+            position: absolute;
+            background: transparent;
+            border: none;
+        }
+        text.jqx-knob-label {
+            font-size: 20px;
+        }
+        .inputField .jqx-input-content {
+            background: transparent;
+            font-size: 20px;
+            color: grey;
+
+        }
+  .knobs{display: flex;
+    justify-content: space-around;}
+  .knobs>div{display:flex}
+  text.jqx-knob-label{display:none;}
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+    $('.container').jqxKnob({
+                height: 190,
+                width: 190,
+                value: 60,
+                min: 0,
+                max: 100,
+                startAngle: 120,
+                endAngle: 480,
+                snapToStep: true,
+                rotation: 'clockwise',
+                labels: {
+                    offset: '88%',
+                    step: 10,
+                    visible: true
+                },
+                marks: {
+                    colorRemaining: { color: '#373636', border: '#373636' },
+                    colorProgress: { color: '#373636', border: '#373636' },
+                    type: 'line',
+                    offset: '71%',
+                    thickness: 1,
+                    size: '6%',
+                    majorSize: '9%',
+                    majorInterval: 10,
+                    minorInterval: 2
+                },
+                progressBar: {
+                    size: '70%',
+                    offset: '0%',
+                    background: {
+                        stroke: '#373636', strokeWidth: 1, fill: { color: '#a7a7a7', gradientType: "linear", gradientStops: [[0, 1], [50, 0.5], [100, 1]] }
+                    }
+                },
+                pointer: {
+                    type: 'circle', style: { fill: { color: '#a4a3a3', gradientType: "linear", gradientStops: [[0, 0.5], [50, 0.6], [100, 1]] }, stroke: '#333' },
+                    size: '10%', offset: '50%'
+                }
+            });
+  })
+    </script>
+<div class="knobs">
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+ </div>
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+  </div>
+ </div>
+    
+<div id="wrap">
+<h1></h1>
+
+<p></p>
+
+<textarea id="layerdef" style="width:100%; height:200px;">
+</textarea>
+<br>
+<input id="buttontp" type="submit" value="change network" onclick="reload();" style="width: 300px; height: 50px;"/>
+
+<p>Feel free to change this, the text area above gets eval()'d when you hit the button and the network gets reloaded. Every 10th of a second, all points are fed to the network multiple times through the trainer class to train the network. The resulting predictions of the network are then "painted" under the data points to show you the generalization.</p>
+
+<p>On the right we visualize the transformed representation of all grid points in the original space and the data, for a given layer and only for 2 neurons at a time. The number in the bracket shows the total number of neurons at that level of representation. If the number is more than 2, you will only see the two visualized but you can cycle through all of them with the cycle button.</p>
+
+<div class="panes">
+<div class="pane">
+<canvas id="NPGcanvas" width="400" height="400">Browser not supported for Canvas. Get a real browser.</canvas>
+<input id="buttondata1" type="submit" value="simple data" onclick="original_data();" style="width: 100px; height: 30px;"/>
+<input id="buttondata2" type="submit" value="circle data" onclick="circle_data();" style="width: 100px; height: 30px;"/>
+<input id="buttondata3" type="submit" value="spiral data" onclick="spiral_data();" style="width: 100px; height: 30px;"/><br>
+<input id="buttondata4" type="submit" value="random data" onclick="random_data();" style="width: 100px; height: 30px;"/><br>
+<p>
+Controls:<br>
+<b>CLICK</b>: Add red data point<br>
+<b>SHIFT+CLICK</b>: Add green data point<br>
+<b>CTRL+CLICK</b>: Remove closest data point<br>
+</p>
+</div>
+
+<div class="pane">
+  <canvas id="viscanvas" width="400" height="400">Browser not supported for Canvas. Get a real browser.</canvas>
+  <div id="cyclestatus"></div>
+<div id="layer_ixes"></div>
+<input id="buttoncycle" type="submit" value="cycle through visualized neurons at selected layer (if more than 2)" onclick="cycle();" style="height: 40px;"/>
+</div>
+
+</div>
+
+<p>Go <a href="http://cs.stanford.edu/people/karpathy/convnetjs/">back to ConvNetJS</a></p>
+
+</div>
+<script> 
+const url1 ='https://momarmbergan.github.io/Vitalsjs/demo/classify2d.html';
+const url2 ='https://momarmbergan.github.io/Vitalsjs/src/base64.txt'; 
+
+async function fetchFileSize(url) {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    
+    const contentLength = response.headers.get('Content-Length');
+    if (contentLength) {
+      return parseInt(contentLength, 10);
+    } else {
+      throw new Error('Content-Length header not found');
+    }
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+    return null;
+  }
+}
+
+function updateFileSizes() {
+  Promise.all([fetchFileSize(url1), fetchFileSize(url2)]).then(([fileSize1, fileSize2]) => {
+    let div1 = $('#byteStream1');
+    let div2 = $('#byteStream2');
+
+    if (div1.length === 0) {
+      div1 = $('<div id="byteStream1"></div>');
+      $('#layerdef').before(div1);
+    }
+    if (div2.length === 0) {
+      div2 = $('<div id="byteStream2"></div>');
+      div1.after(div2);
+    }
+    
+    if (fileSize1 !== null) {
+      div1.text(`Stream Bytes: ${fileSize1} bytes`);
+    } else {
+      div1.text('Error fetching file size 1');
+    }
+
+    if (fileSize2 !== null) {
+      div2.text(`Stealth Stream Bytes: ${fileSize2} bytes`);
+    } else {
+      div2.text('Error fetching file size 2');
+    }
+  });
+}
+
+// Call the function immediately and then every 5 seconds
+updateFileSizes();
+setInterval(updateFileSizes, 1000);
+
+</script>
+</body>
+</html>

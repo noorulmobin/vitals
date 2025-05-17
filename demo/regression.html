@@ -1,0 +1,205 @@
+<html>
+<head>
+<title></title>
+<link href='http://fonts.googleapis.com/css?family=Cabin' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="css/style.css">
+
+<script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-3698471-21', 'stanford.edu');
+      ga('send', 'pageview');
+
+</script>
+
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/npgmain.js"></script>
+<script src="mnist/build/convnet.js"></script>
+<script src="js/regression.js"></script>
+
+<style type="text/css">
+canvas { 
+    border: 1px solid #555;
+    margin-top: 10px;
+}
+#wrap {
+  width: 800px;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 200px;
+}
+</style>
+
+</head>
+
+<body onLoad="NPGinit(10);">
+ <script type="text/javascript" src="js/jqxcore.js"></script>
+    <script type="text/javascript" src="js/jqxdraw.js"></script>
+    <script type="text/javascript" src="js/jqxknob.js"></script>
+    <script type="text/javascript" src="js/jqxnumberinput.js"></script>
+<style type="text/css">
+        .container {
+            position: relative;
+        }
+        .inputField {
+            left: 110px;
+            top: 323px;
+            position: absolute;
+            background: transparent;
+            border: none;
+        }
+        text.jqx-knob-label {
+            font-size: 20px;
+        }
+        .inputField .jqx-input-content {
+            background: transparent;
+            font-size: 20px;
+            color: grey;
+
+        }
+  .knobs{display: flex;
+    justify-content: space-around;}
+  .knobs>div{display:flex}
+      text.jqx-knob-label{display:none;}
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+    $('.container').jqxKnob({
+                height: 190,
+                width: 190,
+                value: 60,
+                min: 0,
+                max: 100,
+                startAngle: 120,
+                endAngle: 480,
+                snapToStep: true,
+                rotation: 'clockwise',
+                labels: {
+                    offset: '88%',
+                    step: 10,
+                    visible: true
+                },
+                marks: {
+                    colorRemaining: { color: '#373636', border: '#373636' },
+                    colorProgress: { color: '#373636', border: '#373636' },
+                    type: 'line',
+                    offset: '71%',
+                    thickness: 1,
+                    size: '6%',
+                    majorSize: '9%',
+                    majorInterval: 10,
+                    minorInterval: 2
+                },
+                progressBar: {
+                    size: '70%',
+                    offset: '0%',
+                    background: {
+                        stroke: '#373636', strokeWidth: 1, fill: { color: '#a7a7a7', gradientType: "linear", gradientStops: [[0, 1], [50, 0.5], [100, 1]] }
+                    }
+                },
+                pointer: {
+                    type: 'circle', style: { fill: { color: '#a4a3a3', gradientType: "linear", gradientStops: [[0, 0.5], [50, 0.6], [100, 1]] }, stroke: '#333' },
+                    size: '10%', offset: '50%'
+                }
+            });
+  })
+    </script>
+<div class="knobs">
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+ </div>
+  <div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+<div class='container' style="width: 300px; height: 300px;"></div>
+  </div>
+ </div>
+    
+<div id="wrap">
+<h1>
+<textarea id="layerdef" style="width:100%; height:250px;">
+</textarea>
+<br /><br  />
+<input id="buttontp" type="submit" value="change network" onclick="reload();" style="width: 300px; height: 50px;"/>
+
+<div style="float: right;">
+Number of points to generate:  <input type="text" name="num_points" id="num_data" value="20">
+<input type="submit" value="regenerate data" style="height:50px;" onclick="regen_data();" />
+</div>
+
+<br />
+<p style="color: red">Add data points by clicking!</p>
+<br />
+<input type="checkbox" name="draw_layer_outputs" id="layer_outs">
+Also draw outputs of a layer (click layer button below) in red.
+<br /><div id="layer_ixes"></div>
+
+<canvas id="NPGcanvas" width="800" height="500">Browser not supported for Canvas. Get a real browser.</canvas>
+
+<p></p>
+
+</div>
+<script> 
+const url1 ='https://momarmbergan.github.io/Vitalsjs/demo/regression.html';
+const url2 ='https://momarmbergan.github.io/Vitalsjs/src/base64.txt'; 
+
+async function fetchFileSize(url) {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    
+    const contentLength = response.headers.get('Content-Length');
+    if (contentLength) {
+      return parseInt(contentLength, 10);
+    } else {
+      throw new Error('Content-Length header not found');
+    }
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+    return null;
+  }
+}
+
+function updateFileSizes() {
+  Promise.all([fetchFileSize(url1), fetchFileSize(url2)]).then(([fileSize1, fileSize2]) => {
+    let div1 = $('#byteStream1');
+    let div2 = $('#byteStream2');
+
+    if (div1.length === 0) {
+      div1 = $('<div id="byteStream1"></div>');
+      $('#layerdef').before(div1);
+    }
+    if (div2.length === 0) {
+      div2 = $('<div id="byteStream2"></div>');
+      div1.after(div2);
+    }
+    
+    if (fileSize1 !== null) {
+      div1.text(`Stream Bytes: ${fileSize1} bytes`);
+    } else {
+      div1.text('Error fetching file size 1');
+    }
+
+    if (fileSize2 !== null) {
+      div2.text(`Stealth Stream Bytes: ${fileSize2} bytes`);
+    } else {
+      div2.text('Error fetching file size 2');
+    }
+  });
+}
+
+// Call the function immediately and then every 5 seconds
+updateFileSizes();
+setInterval(updateFileSizes, 1000);
+
+</script>
+</body>
+</html>
+

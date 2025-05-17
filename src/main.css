@@ -1,0 +1,54 @@
+/* * {
+    margin: 0;
+} */
+
+html,
+body {
+   
+}
+
+body {
+    margin: 0;
+    font-family: "After Burner"
+   
+}
+header{    display: inline-block;
+    width: 100%;
+    box-shadow: 0px 3px 1px #eee;}
+header h2{display: inline-block;FONT-SIZE: 12px;}
+header>img{width: 50px;
+    float: right;
+    margin-top: 10px;}
+    header>h2>img{height: 13px;
+        margin-left: 5px;}
+#chart {
+    /* max-width: 600px;
+    max-height: 400px; */
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+    background-color: #f3f3f300;
+}
+#record{  
+    font-size: 10px;
+    display: inline-flex;
+    line-height: 30px;
+     color: #fff;
+    border: none;
+    outline: none;
+     border-radius: 4px;
+    font-family: "After Burner";
+cursor: pointer;}
+#record img{height: 30px;}
+
+#video{position: fixed;
+    opacity: .5;
+    top: 0;
+    width: 100%;
+    left: 0;z-index:-1;}
+#global{position: absolute;
+    z-index: 999;
+    height: 200px;
+    width: 200px;
+    right: 10px;}
+#printbtn{height:100px;cursor:pointer}
